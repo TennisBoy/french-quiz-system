@@ -94,7 +94,8 @@ as the teacher. The CSP in `web/public/staticwebapp.config.json` also blocks inl
 styles; keep it that way. CSV export goes through `csvCell()`, which defuses formula injection.
 
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are baked in at build time. A build without them
-tree-shakes the whole app down to the "missing config" error (a ~9 KB bundle).
+still succeeds, but the page only shows a "Configuration manquante" message (`isConfigured` in
+`supabase.ts`).
 
 ## Deployment
 
@@ -102,8 +103,11 @@ tree-shakes the whole app down to the "missing config" error (a ~9 KB bundle).
   `npx supabase db push` (never run `seed.sql` there). Then `npx supabase functions deploy`, and
   `npx supabase secrets set ALLOWED_ORIGINS=https://<app>.azurestaticapps.net STUDENT_EMAIL_DOMAIN=tdsb.ca`.
   In the dashboard, disable sign-ups and add the SWA URL under Auth → URL configuration.
-- **Web:** `.github/workflows/azure-static-web-apps.yml` (secret
-  `AZURE_STATIC_WEB_APPS_API_TOKEN`, repo vars `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`).
+- **Web:** GitHub repo `TennisBoy/french-quiz-system` (private). Azure created and is linked to
+  `.github/workflows/azure-static-web-apps-red-flower-08e159d10.yml` (secret
+  `AZURE_STATIC_WEB_APPS_API_TOKEN_RED_FLOWER_08E159D10`). It builds `web/` to `dist` with repo
+  variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Pushes to `main` deploy to
+  production; PRs get preview environments, which share the production Supabase project.
 - **Free-tier caveat:** free Supabase projects pause after about a week of inactivity and have no
   automatic backups.
 - **Privacy:** this stores student data outside TDSB systems, so TDSB approval under MFIPPA is

@@ -3,11 +3,10 @@ import type { Profile } from "./types";
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-if (!url || !anonKey) {
-  throw new Error("VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY manquants (voir web/.env.example)");
-}
+/** False when the build ran without the Vite env vars; main.ts then shows a config message instead of the app. */
+export const isConfigured = Boolean(url && anonKey);
 
-export const supabase = createClient(url, anonKey);
+export const supabase = createClient(url || "http://localhost.invalid", anonKey || "missing");
 
 let cachedProfile: Profile | null = null;
 
