@@ -106,7 +106,7 @@ submissions (assignment, student, class_id = the class it came through, graded_b
 `create-accounts` (students into a class the caller teaches; teachers into a school the caller
 administers; temporary passwords returned once) and `reset-password`. Both start with
 `_shared/auth.ts` `requireUser()` and then authorize against the specific class, school or person.
-Dependency versions live in `supabase/functions/deno.json` (wired per function in `config.toml`).
+Dependency versions live in `supabase/functions/deno.json`, which Deno finds from each function's folder.
 Keep anything that does not need the auth admin API in SQL instead. The local gateway answers CORS
 with `*`; the `ALLOWED_ORIGINS` echo only matters on the hosted project.
 
