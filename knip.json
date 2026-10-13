@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs"]
+    },
+    "web": {
+      "project": ["src/**/*.ts"],
+      "ignore": ["src/database.types.ts"]
+    }
+  },
+  "ignore": ["supabase/functions/**"]
+}

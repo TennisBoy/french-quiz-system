@@ -1,0 +1,53 @@
+# Runs the same gate as `npm run check` on every PR and on main: lint (ESLint, tsc, Deno, Knip),
+# build, database lint, generated-types drift, pgTAP and Deno tests against a throwaway local Supabase.
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - run: npm ci
+      - run: npm ci --prefix web
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      # Only Postgres, auth (it owns auth.users, which the seed and tests use) and pg-meta (type generation).
+      - name: Start local Supabase
+        run: npx supabase start -x realtime,storage-api,imgproxy,kong,mailpit,postgrest,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Database lint
+        run: npm run db:lint
+
+      - name: Generated types match the schema
+        run: npm run db:types:check
+
+      - name: Tests
+        run: npm test

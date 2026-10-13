@@ -7,15 +7,17 @@ import { answerText, correctText, MARK_LABEL, scoreText, STATUS_LABEL } from "./
 export async function renderTeacherReview(main: HTMLElement, params: Params) {
   const { data: sub, error } = await supabase.from("submissions").select("*").eq("id", params.id).single();
   if (error) throw error;
-  const submission = sub as Submission;
+  const submission = sub as unknown as Submission;
 
   const [{ data: assignment, error: e1 }, { data: keyRow, error: e2 }, { data: student, error: e3 }] = await Promise.all([
     supabase.from("assignments").select("*").eq("id", submission.assignment_id).single(),
     supabase.from("answer_keys").select("key").eq("assignment_id", submission.assignment_id).maybeSingle(),
     supabase.from("profiles").select("*").eq("id", submission.student_id).single(),
   ]);
-  if (e1 || e2 || e3) throw e1 ?? e2 ?? e3;
-  const a = assignment as Assignment;
+  if (e1) throw e1;
+  if (e2) throw e2;
+  if (e3) throw e3;
+  const a = assignment as unknown as Assignment;
   const key = (keyRow?.key ?? null) as AnswerKey | null;
   const p = student as Profile;
 
@@ -84,11 +86,11 @@ export async function renderTeacherReview(main: HTMLElement, params: Params) {
         p_submission_id: submission.id,
         p_marks: overrides,
         p_question_comments: comments,
-        p_teacher_comment: overall.value.trim() || null,
+        p_teacher_comment: overall.value.trim() || undefined,
         p_return: returnNow,
       });
       if (error) throw error;
-      const updated = data as Submission;
+      const updated = data as unknown as Submission;
       scoreEl.textContent = scoreText(updated.score, updated.max_score);
       showMessage(msg, returnNow ? "Enregistré et retourné à l'élève." : "Enregistré (pas encore retourné).", "success");
     } catch (e) {

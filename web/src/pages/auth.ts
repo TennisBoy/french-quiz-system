@@ -1,6 +1,6 @@
 import { el, showMessage } from "../dom";
 import { homeFor, navigate } from "../router";
-import { currentProfile, errorMessage, supabase } from "../supabase";
+import { currentMe, errorMessage, supabase } from "../supabase";
 
 export function renderLogin(main: HTMLElement) {
   const msg = el("div");
@@ -22,8 +22,8 @@ export function renderLogin(main: HTMLElement) {
         showMessage(msg, error.message === "Invalid login credentials" ? "Courriel ou mot de passe incorrect." : error.message);
         return;
       }
-      const profile = await currentProfile(true);
-      navigate(profile ? homeFor(profile) : "/login", true);
+      const me = await currentMe(true);
+      navigate(me ? homeFor(me) : "/login", true);
     },
   },
     el("h1", {}, "Connexion"),
@@ -53,8 +53,8 @@ export function renderChangePassword(main: HTMLElement) {
         const { error } = await supabase.auth.updateUser({ password: pw.value });
         if (error) throw error;
         // The database clears must_change_password when the password changes.
-        const profile = await currentProfile(true);
-        navigate(profile ? homeFor(profile) : "/login", true);
+        const me = await currentMe(true);
+        navigate(me ? homeFor(me) : "/login", true);
       } catch (err) {
         showMessage(msg, errorMessage(err));
         submit.disabled = false;

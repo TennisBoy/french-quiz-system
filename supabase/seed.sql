@@ -1,24 +1,37 @@
 -- Local development seed. Runs on `supabase db reset`. NEVER run against production:
 -- it creates accounts with a known password.
 --
--- Accounts (password for all: motdepasse123):
---   fiona.stewart@tdsb.on.ca  teacher
---   100000001@tdsb.ca         student, FSF2D7-2
---   100000002@tdsb.ca         student, FSF2D7-2
---   100000003@tdsb.ca         student, FSF3U7-1
+-- Two schools so tenant isolation can be tested (password for all accounts: motdepasse123):
+--   École secondaire Exemple
+--     fiona.stewart@tdsb.on.ca  admin; teaches FSF2D7-2 and FSF3U7-1
+--     marie.dupont@tdsb.on.ca   teacher; teaches FSF3U7-2
+--     100000001@tdsb.ca         student, FSF2D7-2
+--     100000002@tdsb.ca         student, FSF2D7-2
+--     100000003@tdsb.ca         student, FSF3U7-1
+--   Autre école
+--     jean.martin@tdsb.on.ca    teacher; teaches FSF1D1-1
+--     100000004@tdsb.ca         student, FSF1D1-1
 
-insert into public.classes (id, code, name) values
-  ('c0000000-0000-0000-0000-000000000001', 'FSF2D7-2', 'Français 10e année'),
-  ('c0000000-0000-0000-0000-000000000002', 'FSF3U7-1', 'Français 11e année'),
-  ('c0000000-0000-0000-0000-000000000003', 'FSF3U7-2', 'Français 11e année');
+insert into public.schools (id, name, student_email_domain, staff_email_domain) values
+  ('e0000000-0000-0000-0000-000000000001', 'École secondaire Exemple', 'tdsb.ca', 'tdsb.on.ca'),
+  ('e0000000-0000-0000-0000-000000000002', 'Autre école', 'tdsb.ca', 'tdsb.on.ca');
+
+insert into public.classes (id, school_id, code, name) values
+  ('c0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'FSF2D7-2', 'Français 10e année'),
+  ('c0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 'FSF3U7-1', 'Français 11e année'),
+  ('c0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 'FSF3U7-2', 'Français 11e année'),
+  ('c0000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000002', 'FSF1D1-1', 'Français 9e année');
 
 -- Users. The on_auth_user_created trigger creates a bare profile for each; filled in below.
 with u (id, email) as (
   values
     ('a0000000-0000-0000-0000-000000000001'::uuid, 'fiona.stewart@tdsb.on.ca'),
+    ('a0000000-0000-0000-0000-000000000002'::uuid, 'marie.dupont@tdsb.on.ca'),
+    ('a0000000-0000-0000-0000-000000000003'::uuid, 'jean.martin@tdsb.on.ca'),
     ('b0000000-0000-0000-0000-000000000001'::uuid, '100000001@tdsb.ca'),
     ('b0000000-0000-0000-0000-000000000002'::uuid, '100000002@tdsb.ca'),
-    ('b0000000-0000-0000-0000-000000000003'::uuid, '100000003@tdsb.ca')
+    ('b0000000-0000-0000-0000-000000000003'::uuid, '100000003@tdsb.ca'),
+    ('b0000000-0000-0000-0000-000000000004'::uuid, '100000004@tdsb.ca')
 ), ins as (
   insert into auth.users (
     instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -39,19 +52,45 @@ select gen_random_uuid(), id, id::text,
 from ins;
 
 update public.profiles p
-set first_name = v.first_name, last_name = v.last_name, class_id = v.class_id, role = v.role::public.user_role
+set first_name = v.first_name, last_name = v.last_name, honorific = v.honorific
 from (values
-  ('a0000000-0000-0000-0000-000000000001'::uuid, 'Fiona', 'Stewart', null::uuid, 'teacher'),
-  ('b0000000-0000-0000-0000-000000000001'::uuid, 'Lucas', 'Tremblay', 'c0000000-0000-0000-0000-000000000001'::uuid, 'student'),
-  ('b0000000-0000-0000-0000-000000000002'::uuid, 'Léa', 'Gagnon', 'c0000000-0000-0000-0000-000000000001'::uuid, 'student'),
-  ('b0000000-0000-0000-0000-000000000003'::uuid, 'Amir', 'Haddad', 'c0000000-0000-0000-0000-000000000002'::uuid, 'student')
-) as v (id, first_name, last_name, class_id, role)
+  ('a0000000-0000-0000-0000-000000000001'::uuid, 'Fiona', 'Stewart', 'Ms.'),
+  ('a0000000-0000-0000-0000-000000000002'::uuid, 'Marie', 'Dupont', 'Mme'),
+  ('a0000000-0000-0000-0000-000000000003'::uuid, 'Jean', 'Martin', 'M.'),
+  ('b0000000-0000-0000-0000-000000000001'::uuid, 'Lucas', 'Tremblay', null),
+  ('b0000000-0000-0000-0000-000000000002'::uuid, 'Léa', 'Gagnon', null),
+  ('b0000000-0000-0000-0000-000000000003'::uuid, 'Amir', 'Haddad', null),
+  ('b0000000-0000-0000-0000-000000000004'::uuid, 'Chloé', 'Roy', null)
+) as v (id, first_name, last_name, honorific)
 where p.id = v.id;
+
+insert into public.school_members (school_id, user_id, role) values
+  ('e0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'admin'),
+  ('e0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002', 'teacher'),
+  ('e0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000003', 'teacher'),
+  ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'student'),
+  ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', 'student'),
+  ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000003', 'student'),
+  ('e0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000004', 'student');
+
+insert into public.class_teachers (class_id, teacher_id) values
+  ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001'),
+  ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001'),
+  ('c0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002'),
+  ('c0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000003');
+
+insert into public.enrollments (class_id, student_id) values
+  ('c0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001'),
+  ('c0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002'),
+  ('c0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000003'),
+  ('c0000000-0000-0000-0000-000000000004', 'b0000000-0000-0000-0000-000000000004');
 
 -- The homework from the original prototype (dropoff/). Explanations were rewritten in full because
 -- the prototype's are truncated in the PDF.
-insert into public.assignments (id, title, description, content) values (
+insert into public.assignments (id, school_id, owner_id, title, description, content) values (
   'd0000000-0000-0000-0000-000000000001',
+  'e0000000-0000-0000-0000-000000000001',
+  'a0000000-0000-0000-0000-000000000001',
   'Les verbes réciproques : relations sociales',
   'Durée : 15 à 20 minutes. Rappel : au passé composé, les verbes réciproques prennent toujours l''auxiliaire être. Si le pronom est COD (rencontrer quelqu''un), le participe passé s''accorde avec le sujet : « Elles se sont rencontrées ». Si le pronom est COI (parler à quelqu''un), il n''y a pas d''accord : « Elles se sont parlé ».',
   $json$
@@ -159,5 +198,5 @@ insert into public.answer_keys (assignment_id, key) values (
   $json$
 );
 
-insert into public.assignment_classes (assignment_id, class_id) values
+insert into public.class_assignments (assignment_id, class_id) values
   ('d0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001');

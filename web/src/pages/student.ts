@@ -1,58 +1,50 @@
 import { confirmButton, el, formatDate, showMessage } from "../dom";
 import { link, navigate, type Params } from "../router";
 import { errorMessage, supabase } from "../supabase";
-import type { Answers, Assignment, MySubmissionDetail, Profile, Question, Section, SubmissionStatus } from "../types";
+import type { Answers, Assignment, MySubmissionDetail, Question, Section } from "../types";
 import { allQuestions, answerText, correctText, MARK_LABEL, scoreText, STATUS_LABEL } from "./questions";
 
-interface MySubmissionRow {
-  assignment_id: string;
-  status: SubmissionStatus;
-  submitted_at: string;
-  returned_at: string | null;
-  score: number | null;
-  max_score: number | null;
-}
-
-export async function renderStudentHome(main: HTMLElement, _params: Params, _profile: Profile | null) {
-  const [{ data: assignments, error }, { data: mine, error: mineError }] = await Promise.all([
-    supabase.from("assignments").select("id, title, is_open, due_at").order("created_at", { ascending: false }),
-    supabase.rpc("my_submissions"),
-  ]);
+export async function renderStudentHome(main: HTMLElement) {
+  const { data, error } = await supabase.rpc("my_assignments");
   if (error) throw error;
-  if (mineError) throw mineError;
-  const byAssignment = new Map((mine as MySubmissionRow[]).map((s) => [s.assignment_id, s]));
+  // Open work first, soonest due date first; then the rest.
+  const rows = [...data].sort((a, b) =>
+    Number(b.is_open && !b.status) - Number(a.is_open && !a.status)
+    || (a.due_at ?? "9999").localeCompare(b.due_at ?? "9999"));
 
   main.append(el("h1", {}, "Mes devoirs"));
-  if (!assignments.length) {
+  if (!rows.length) {
     main.append(el("p", { class: "muted" }, "Aucun devoir pour le moment."));
     return;
   }
-  main.append(el("ul", { class: "list" }, assignments.map((a) => {
-    const sub = byAssignment.get(a.id);
-    const status = sub ? STATUS_LABEL[sub.status === "graded" ? "submitted" : sub.status] : a.is_open ? "À faire" : "Fermé";
+  main.append(el("ul", { class: "list" }, rows.map((a) => {
+    const status = a.status ? STATUS_LABEL[a.status === "graded" ? "submitted" : a.status] : a.is_open ? "À faire" : "Fermé";
     return el("li", { class: "list-item" },
-      link(`/eleve/devoir/${a.id}`, a.title),
-      el("span", { class: `badge badge-${sub?.status ?? (a.is_open ? "todo" : "closed")}` }, status),
-      sub?.score !== null && sub?.score !== undefined ? el("span", { class: "muted" }, scoreText(sub.score, sub.max_score)) : null,
+      link(`/eleve/devoir/${a.assignment_id}`, a.title),
+      el("span", { class: `badge badge-${a.status ?? (a.is_open ? "todo" : "closed")}` }, status),
+      a.score !== null ? el("span", { class: "muted" }, scoreText(a.score, a.max_score)) : null,
       a.due_at ? el("span", { class: "muted small" }, `À remettre : ${formatDate(a.due_at)}`) : null,
     );
   })));
 }
 
 export async function renderStudentAssignment(main: HTMLElement, params: Params) {
-  const [{ data: assignment, error }, { data: detail, error: detailError }] = await Promise.all([
+  const [{ data: assignment, error }, { data: issues, error: issuesError }, { data: detail, error: detailError }] = await Promise.all([
     supabase.from("assignments").select("*").eq("id", params.id).single(),
+    supabase.from("class_assignments").select("is_open").eq("assignment_id", params.id),
     supabase.rpc("my_submission_detail", { p_assignment_id: params.id }),
   ]);
   if (error) throw error;
+  if (issuesError) throw issuesError;
   if (detailError) throw detailError;
+  const a = assignment as unknown as Assignment;
 
-  main.append(link("/eleve", "← Mes devoirs", "back"), el("h1", {}, assignment.title));
-  if (assignment.description) main.append(el("p", { class: "card info" }, assignment.description));
+  main.append(link("/eleve", "← Mes devoirs", "back"), el("h1", {}, a.title));
+  if (a.description) main.append(el("p", { class: "card info" }, a.description));
 
-  if (detail) renderResult(main, assignment as Assignment, detail as MySubmissionDetail);
-  else if (!assignment.is_open) main.append(el("p", { class: "alert alert-info" }, "Ce devoir est fermé."));
-  else renderForm(main, assignment as Assignment);
+  if (detail) renderResult(main, a, detail as unknown as MySubmissionDetail);
+  else if (!issues.some((i) => i.is_open)) main.append(el("p", { class: "alert alert-info" }, "Ce devoir est fermé."));
+  else renderForm(main, a);
 }
 
 // ---------------------------------------------------------------------------------------------
