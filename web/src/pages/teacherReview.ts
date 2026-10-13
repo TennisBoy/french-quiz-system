@@ -14,7 +14,9 @@ export async function renderTeacherReview(main: HTMLElement, params: Params) {
     supabase.from("answer_keys").select("key").eq("assignment_id", submission.assignment_id).maybeSingle(),
     supabase.from("profiles").select("*").eq("id", submission.student_id).single(),
   ]);
-  if (e1 || e2 || e3) throw e1 ?? e2 ?? e3;
+  if (e1) throw e1;
+  if (e2) throw e2;
+  if (e3) throw e3;
   const a = assignment as unknown as Assignment;
   const key = (keyRow?.key ?? null) as AnswerKey | null;
   const p = student as Profile;

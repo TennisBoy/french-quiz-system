@@ -6,11 +6,21 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
+    "db:lint": "supabase db lint --local --level warning --fail-on warning",
+    "db:types": "node scripts/db-types.mjs --write",
+    "db:types:check": "node scripts/db-types.mjs",
     "functions:serve": "supabase functions serve --env-file supabase/functions/.env",
+    "functions:lint": "cd supabase/functions && deno lint && deno check */index.ts _shared/*.ts",
+    "functions:test": "cd supabase/functions && deno test _shared",
     "dev": "npm --prefix web run dev",
-    "build": "npm --prefix web run build"
+    "build": "npm --prefix web run build",
+    "lint": "npm --prefix web run lint && npm run functions:lint && knip",
+    "test": "npm run db:test && npm run functions:test",
+    "check": "npm run lint && npm run build && npm run db:lint && npm run db:types:check && npm test"
   },
   "devDependencies": {
+    "deno": "^2.9.6",
+    "knip": "^6.41.0",
     "supabase": "^2.120.0"
   }
 }

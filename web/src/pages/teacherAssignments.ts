@@ -23,7 +23,8 @@ export async function renderTeacherAssignments(main: HTMLElement, _params: Param
       .select("id, title, school_id, owner_id, owner:profiles!assignments_owner_id_fkey(first_name, last_name, honorific), class_assignments(class_id, is_open, due_at), submissions(count)")
       .order("created_at", { ascending: false }),
   ]);
-  if (e1 || e2) throw e1 ?? e2;
+  if (e1) throw e1;
+  if (e2) throw e2;
   const codes = new Map(classes.map((c) => [c.id, c.code]));
   const msg = el("div");
 
@@ -103,7 +104,8 @@ async function duplicate(id: string): Promise<string> {
     supabase.from("assignments").select("*").eq("id", id).single(),
     supabase.from("answer_keys").select("key").eq("assignment_id", id).maybeSingle(),
   ]);
-  if (e1 || e2) throw e1 ?? e2;
+  if (e1) throw e1;
+  if (e2) throw e2;
   const { data, error } = await supabase.rpc("save_assignment", {
     p_school_id: a.school_id,
     p_title: `Copie de ${a.title}`,
@@ -466,7 +468,7 @@ export async function renderTeacherAssignmentEditor(main: HTMLElement, params: P
       });
       if (error) throw error;
       if (!draft.id) {
-        draft.id = data as string;
+        draft.id = data;
         history.replaceState(null, "", `/enseignant/devoirs/${draft.id}`);
       }
       dirty = false;

@@ -220,7 +220,7 @@ web3 = 30
 [auth.email]
 # Allow/disallow new user signups via email to your project.
 # Keep true: locally this toggles the whole email/password provider. Self-registration is blocked by
-# [auth] enable_signup = false; accounts are created by the teacher via the create-students function.
+# [auth] enable_signup = false; accounts are created by teachers and school admins via the create-accounts function.
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
@@ -415,3 +415,10 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# Edge Functions share one import map (dependency versions live in supabase/functions/deno.json).
+[functions.create-accounts]
+import_map = "./functions/deno.json"
+
+[functions.reset-password]
+import_map = "./functions/deno.json"

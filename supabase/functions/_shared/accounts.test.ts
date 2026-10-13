@@ -1,5 +1,5 @@
 // npm run functions:test
-import { assertEquals, assertMatch } from "jsr:@std/assert@1";
+import { assertEquals, assertMatch } from "@std/assert";
 import { validateAccount } from "./accounts.ts";
 import { generateTempPassword } from "./password.ts";
 

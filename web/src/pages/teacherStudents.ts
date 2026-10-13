@@ -220,7 +220,7 @@ export async function renderTeacherStudents(main: HTMLElement, _params: Params, 
     const { data, error } = await supabase.from("school_members").select("role, profiles(*)")
       .eq("school_id", school.school_id).in("role", ["admin", "teacher"]);
     if (error) return showMessage(box, errorMessage(error));
-    const staff = data.flatMap((m) => (m.profiles ? [{ role: m.role, p: m.profiles as Profile }] : []))
+    const staff = data.flatMap((m) => (m.profiles ? [{ role: m.role, p: m.profiles }] : []))
       .sort((a, b) => a.p.last_name.localeCompare(b.p.last_name, "fr"));
     const msg = el("div");
     const { form, show } = accountsForm(

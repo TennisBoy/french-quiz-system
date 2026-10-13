@@ -4,8 +4,8 @@ import type { Database } from "./database.types";
 
 type Row<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"];
 
-export type SchoolRole = Database["public"]["Enums"]["school_role"];
-export type SubmissionStatus = Database["public"]["Enums"]["submission_status"];
+type SchoolRole = Database["public"]["Enums"]["school_role"];
+type SubmissionStatus = Database["public"]["Enums"]["submission_status"];
 export type Mark = "correct" | "incorrect" | "review";
 
 /** Returned by my_context(). */
@@ -48,7 +48,7 @@ export interface Section {
   questions: Question[];
 }
 
-export interface AssignmentContent {
+interface AssignmentContent {
   sections: Section[];
 }
 

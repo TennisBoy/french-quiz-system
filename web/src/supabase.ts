@@ -41,22 +41,24 @@ export function adminSchools(me: Me): Membership[] {
 
 /** Calls an Edge Function and turns its `{ error }` body into a thrown Error. */
 export async function callFunction<T>(name: string, body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(name, { body });
+  const res = await supabase.functions.invoke<T>(name, { body });
+  const error: unknown = res.error; // typed `any` by supabase-js
   if (error) {
-    let message = error.message;
+    let message = errorMessage(error);
     try {
-      const payload = await (error as { context?: Response }).context?.json();
-      if (payload?.error) message = payload.error;
+      const context: unknown = (error as { context?: unknown }).context;
+      const payload: unknown = context instanceof Response ? await context.json() : null;
+      if (payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string") message = payload.error;
     } catch {
       // body was not JSON; keep the generic message
     }
     throw new Error(message);
   }
-  return data as T;
+  return res.data!;
 }
 
 export function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
-  if (e && typeof e === "object" && "message" in e) return String((e as { message: unknown }).message);
+  if (e && typeof e === "object" && "message" in e && typeof e.message === "string") return e.message;
   return String(e);
 }

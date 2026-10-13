@@ -360,6 +360,48 @@ create policy "submissions: teachers delete" on public.submissions
   for delete to authenticated using (class_id in (select private.my_taught_class_ids()));
 
 -- ---------------------------------------------------------------------------
+-- Fix from `supabase db lint`: grading calls STABLE functions (jsonb_build_object), so it cannot be
+-- IMMUTABLE. Same body otherwise.
+-- ---------------------------------------------------------------------------
+
+create or replace function private.grade_answers(p_content jsonb, p_key jsonb, p_answers jsonb)
+returns jsonb
+language plpgsql stable set search_path = ''
+as $$
+declare
+  v_results jsonb := '{}'::jsonb;
+  v_answer  jsonb;
+  v_qkey    jsonb;
+  v_mark    text;
+  q         record;
+begin
+  for q in select * from private.assignment_questions(p_content) loop
+    v_answer := p_answers -> q.question_id;
+    v_qkey   := p_key -> q.question_id;
+
+    if v_answer is null or v_answer = 'null'::jsonb or btrim(v_answer #>> '{}') = '' then
+      v_mark := 'incorrect';
+    elsif v_qkey is null then
+      v_mark := 'review';
+    elsif q.qtype = 'choice' then
+      v_mark := case when (v_answer #>> '{}') = (v_qkey ->> 'correct') then 'correct' else 'incorrect' end;
+    else
+      v_mark := case
+        when exists (
+          select 1 from jsonb_array_elements_text(coalesce(v_qkey -> 'accept', '[]')) a
+          where private.normalize_answer(a) = private.normalize_answer(v_answer #>> '{}')
+        ) then 'correct'
+        else 'review'
+      end;
+    end if;
+
+    v_results := v_results || jsonb_build_object(q.question_id, v_mark);
+  end loop;
+  return v_results;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- RPC: who am I
 -- ---------------------------------------------------------------------------
 

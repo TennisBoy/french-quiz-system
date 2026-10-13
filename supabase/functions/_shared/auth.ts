@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.49.4";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { HttpError } from "./http.ts";
 
 /** Service-role client: bypasses RLS. Only ever used inside Edge Functions. */

@@ -72,13 +72,13 @@ export function displayName(p: { first_name: string; last_name: string; honorifi
 }
 
 /** CSV cell, quoted, and neutralized against spreadsheet formula injection. */
-export function csvCell(value: unknown): string {
+function csvCell(value: string | number | null | undefined): string {
   let s = value === null || value === undefined ? "" : String(value);
   if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return `"${s.replace(/"/g, '""')}"`;
 }
 
-export function downloadCsv(filename: string, rows: unknown[][]) {
+export function downloadCsv(filename: string, rows: (string | number | null | undefined)[][]) {
   const csv = "﻿" + rows.map((r) => r.map(csvCell).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   const a = el("a", { href: url, download: filename });

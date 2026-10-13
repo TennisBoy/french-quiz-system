@@ -4,7 +4,7 @@ import { themeButton } from "./theme";
 import type { Me } from "./types";
 
 export type Params = Record<string, string>;
-export type Audience = "staff" | "student";
+type Audience = "staff" | "student";
 export interface Route {
   path: string; // e.g. "/eleve/devoir/:id"
   render: (main: HTMLElement, params: Params, me: Me | null) => void | Promise<void>;
