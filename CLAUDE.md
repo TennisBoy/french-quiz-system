@@ -102,6 +102,11 @@ styles; keep it that way. CSV export goes through `csvCell()`, which defuses for
 still succeeds, but the page only shows a "Configuration manquante" message (`isConfigured` in
 `supabase.ts`).
 
+## Git workflow
+
+Never commit directly to `main`. Commit only on a feature branch (or a sub-branch of one), push
+it, open a PR into `main`, and merge the PR. A merge to `main` deploys production.
+
 ## Deployment
 
 - **Supabase:** create the project in region `ca-central-1`. Run `npx supabase link` and
