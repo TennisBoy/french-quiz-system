@@ -141,7 +141,8 @@ Configuration that is not in the code:
 4. If the change includes a database migration: back it up and apply it to production first
    (`npx supabase db dump --linked --data-only -f backup.sql`, then `npx supabase db push`). If it
    changes Edge Functions: `npx supabase functions deploy`.
-5. Merge the PR. Azure deploys the website to production in about a minute.
+5. Merge the PR once the owner approves it (nothing is merged without that). Azure deploys the
+   website to production in about a minute.
 
 Database changes are always **new migration files**. Never edit one that has been merged: production
 has already run it.
