@@ -54,11 +54,16 @@ Azure only serves files. After the page loads, every request goes from the brows
   separate so students can never select it), and `submissions` (unique per student and assignment).
 - **Content is data.** `assignments.content` is `{sections:[{id,title,instructions,questions:[{id,
   type:"choice"|"text",prompt,context?,options?,points?}]}]}`. `answer_keys.key` maps each question
-  id to `{correct:<option index>}` or `{accept:[...]}`, plus `explanation`. New assignments and
-  classes are rows; there is no authoring UI yet (use Studio or SQL).
+  id to `{correct:<option index>}` or `{accept:[...]}`, plus `explanation`. The teacher writes
+  assignments on the Devoirs page (`pages/teacherAssignments.ts`), which saves through
+  `save_assignment`. Question ids are generated once and kept across edits, because submissions
+  store answers by question id (and choice answers by option position).
 - **Every write that matters goes through an RPC.** Students and the teacher never insert or update
   `submissions` directly:
-  - `submit_assignment` grades on the server. Choice answers are compared by original option index;
+  - `save_assignment`: teacher only. Validates the content shape, writes the assignment, key and
+    classes in one transaction, drops key entries for removed questions, and re-scores existing
+    submissions (with `p_regrade`, it also redoes their `auto_results`; teacher marks are kept).
+  - `submit_assignment` grades on the server via `private.grade_answers` (shared with re-grading). Choice answers are compared by original option index;
     text answers are normalized (`private.normalize_answer`: case, spaces, apostrophes, trailing
     period; accents kept). Matches are `correct`. Any other non-empty text is `review`, never
     `incorrect`.

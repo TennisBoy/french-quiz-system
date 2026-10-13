@@ -36,7 +36,7 @@ function match(path: string): { route: Route; params: Params } | null {
 function header(profile: Profile | null): HTMLElement {
   const nav = el("nav", { class: "nav" });
   if (profile?.role === "teacher") {
-    nav.append(link("/enseignant", "Résultats"), link("/enseignant/eleves", "Élèves et classes"));
+    nav.append(link("/enseignant", "Résultats"), link("/enseignant/devoirs", "Devoirs"), link("/enseignant/eleves", "Élèves et classes"));
   } else if (profile) {
     nav.append(link("/eleve", "Mes devoirs"));
   }

@@ -52,7 +52,7 @@ export async function renderTeacherDashboard(main: HTMLElement) {
     const saved = remember("dash:assignment");
     if (saved && list.some((a) => a.id === saved)) assignmentSelect.value = saved;
     if (!list.length) {
-      body.replaceChildren(el("p", { class: "muted" }, "Aucun devoir assigné à cette classe."));
+      body.replaceChildren(el("p", { class: "muted" }, "Aucun devoir assigné à cette classe. ", link("/enseignant/devoirs", "Gérer les devoirs")));
       return;
     }
     await loadTable();

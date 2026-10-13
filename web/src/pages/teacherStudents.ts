@@ -16,14 +16,22 @@ const STATUS_TEXT: Record<CreateResult["status"], string> = {
   error: "Erreur",
 };
 
-/** Accepts lines of "courriel, prénom, nom" (comma, semicolon or tab separated, e.g. pasted from a spreadsheet). */
+/**
+ * Accepts lines of "courriel, prénom, nom" (comma, semicolon or tab separated, e.g. pasted from a
+ * spreadsheet). The email may be in any column; the other two cells are read as prénom then nom.
+ */
 function parseRoster(text: string) {
   return text
     .split(/\r?\n/)
     .map((line) => line.split(/[,;\t]/).map((c) => c.trim()))
     .filter((cells) => cells.some(Boolean))
-    .filter((cells) => !/courriel|email/i.test(cells[0])) // header row
-    .map(([email = "", first_name = "", last_name = ""]) => ({ email, first_name, last_name }));
+    .filter((cells) => !cells.some((c) => /^(courriel|e-?mail)$/i.test(c))) // header row
+    .map((cells) => {
+      const at = cells.findIndex((c) => c.includes("@"));
+      const email = at >= 0 ? cells[at] : cells[0] ?? "";
+      const [first_name = "", last_name = ""] = cells.filter((c, i) => i !== (at >= 0 ? at : 0) && c);
+      return { email, first_name, last_name };
+    });
 }
 
 export async function renderTeacherStudents(main: HTMLElement) {

@@ -1,7 +1,7 @@
 import { confirmButton, el, formatDate, showMessage } from "../dom";
 import { link, navigate, type Params } from "../router";
 import { errorMessage, supabase } from "../supabase";
-import type { Answers, Assignment, MySubmissionDetail, Profile, Question, SubmissionStatus } from "../types";
+import type { Answers, Assignment, MySubmissionDetail, Profile, Question, Section, SubmissionStatus } from "../types";
 import { allQuestions, answerText, correctText, MARK_LABEL, scoreText, STATUS_LABEL } from "./questions";
 
 interface MySubmissionRow {
@@ -127,6 +127,21 @@ function questionInput(q: Question, answers: Answers, onChange: () => void): HTM
   });
 }
 
+/** The questions as the student answers them. Also used for the teacher's preview in the editor. */
+export function sectionCards(sections: Section[], answers: Answers, onChange: () => void): HTMLElement[] {
+  let n = 0;
+  return sections.map((section, si) => el("section", { class: "card" },
+    el("p", { class: "eyebrow" }, `Partie ${si + 1} / ${sections.length}`),
+    el("h2", {}, section.title),
+    section.instructions ? el("p", { class: "muted" }, section.instructions) : null,
+    section.questions.map((q) => el("div", { class: "question" },
+      q.context ? el("p", { class: "context" }, q.context) : null,
+      el("p", { class: "prompt" }, `${++n}. ${q.prompt}`),
+      questionInput(q, answers, onChange),
+    )),
+  ));
+}
+
 function renderForm(main: HTMLElement, assignment: Assignment) {
   const answers = loadDraft(assignment.id);
   const msg = el("div");
@@ -138,19 +153,7 @@ function renderForm(main: HTMLElement, assignment: Assignment) {
     progress.textContent = `${answeredCount()} / ${questions.length} réponses`;
   };
 
-  let n = 0;
-  for (const [si, section] of assignment.content.sections.entries()) {
-    main.append(el("section", { class: "card" },
-      el("p", { class: "eyebrow" }, `Partie ${si + 1} / ${assignment.content.sections.length}`),
-      el("h2", {}, section.title),
-      section.instructions ? el("p", { class: "muted" }, section.instructions) : null,
-      section.questions.map((q) => el("div", { class: "question" },
-        q.context ? el("p", { class: "context" }, q.context) : null,
-        el("p", { class: "prompt" }, `${++n}. ${q.prompt}`),
-        questionInput(q, answers, onChange),
-      )),
-    ));
-  }
+  main.append(...sectionCards(assignment.content.sections, answers, onChange));
 
   const submit = async () => {
     try {

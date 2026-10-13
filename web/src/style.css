@@ -67,7 +67,7 @@ h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
 .card.info { background: var(--info-bg); }
 
 label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.9rem; }
-input[type="text"], input[type="email"], input[type="password"], select, textarea {
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="datetime-local"], select, textarea {
   font: inherit; color: inherit; background: var(--surface);
   border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.65rem; width: 100%;
 }
@@ -147,6 +147,23 @@ blockquote.comment { margin: 0.5rem 0; padding-left: 0.8rem; border-left: 3px so
 .grade-row select { flex: 0 1 260px; }
 .grade-row input { flex: 1 1 220px; width: auto; }
 .submit-bar { position: sticky; bottom: 0; }
+
+/* Assignment editor */
+.q-edit { border-top: 1px solid var(--border); padding: 1rem 0 0.25rem; }
+.q-head { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; }
+.q-head select { width: auto; }
+.q-tools { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; margin-left: auto; }
+label.inline { flex-direction: row; align-items: center; gap: 0.4rem; margin: 0; }
+input.points { width: 5rem; }
+label.check { flex-direction: row; align-items: center; gap: 0.5rem; font-weight: 400; }
+fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.8rem; margin: 0 0 0.9rem; }
+legend { font-weight: 600; font-size: 0.9rem; padding: 0 0.3rem; }
+.class-picks { display: flex; flex-wrap: wrap; gap: 0 1.25rem; }
+.class-picks label.check { margin: 0.2rem 0; }
+.choice-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.4rem; }
+.choice-row input[type="text"] { flex: 1; }
+.nowrap { white-space: nowrap; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 0.5rem; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; display: flex; flex-direction: column; }

@@ -4,6 +4,7 @@ import { renderStudentHome, renderStudentAssignment } from "./pages/student";
 import { renderTeacherDashboard } from "./pages/teacherDashboard";
 import { renderTeacherReview } from "./pages/teacherReview";
 import { renderTeacherStudents } from "./pages/teacherStudents";
+import { renderTeacherAssignmentEditor, renderTeacherAssignments } from "./pages/teacherAssignments";
 import { el } from "./dom";
 import { isConfigured } from "./supabase";
 
@@ -24,4 +25,7 @@ if (!isConfigured) {
   { path: "/enseignant", render: renderTeacherDashboard, role: "teacher" },
   { path: "/enseignant/remise/:id", render: renderTeacherReview, role: "teacher" },
   { path: "/enseignant/eleves", render: renderTeacherStudents, role: "teacher" },
+  { path: "/enseignant/devoirs", render: renderTeacherAssignments, role: "teacher" },
+  { path: "/enseignant/devoirs/nouveau", render: renderTeacherAssignmentEditor, role: "teacher" },
+  { path: "/enseignant/devoirs/:id", render: renderTeacherAssignmentEditor, role: "teacher" },
 ]);
