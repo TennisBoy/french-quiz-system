@@ -14,6 +14,9 @@ returned does the student see marks, correct answers and explanations. UI text i
 transcript in which the teacher built a single-file HTML prototype and stated her requirements. The
 others are printouts of that prototype, which this project replaces.
 
+`INFRASTRUCTURE.md` is the human guide to hosting, security, deployment, costs and operations; keep
+it in step with this file.
+
 ## Commands
 
 Run these from the repo root. Docker must be running for anything that touches the database.
