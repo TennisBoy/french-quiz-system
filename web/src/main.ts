@@ -7,6 +7,9 @@ import { renderTeacherStudents } from "./pages/teacherStudents";
 import { renderTeacherAssignmentEditor, renderTeacherAssignments } from "./pages/teacherAssignments";
 import { el } from "./dom";
 import { isConfigured } from "./supabase";
+import { initTheme } from "./theme";
+
+initTheme();
 
 const app = document.getElementById("app")!;
 

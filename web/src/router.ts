@@ -1,5 +1,6 @@
 import { el, showMessage, fullName } from "./dom";
 import { clearProfile, currentProfile, errorMessage, supabase } from "./supabase";
+import { themeButton } from "./theme";
 import type { Profile, Role } from "./types";
 
 export type Params = Record<string, string>;
@@ -40,6 +41,7 @@ function header(profile: Profile | null): HTMLElement {
   } else if (profile) {
     nav.append(link("/eleve", "Mes devoirs"));
   }
+  nav.append(themeButton());
   if (profile) {
     nav.append(
       el("span", { class: "nav-user" }, fullName(profile) || profile.email),
