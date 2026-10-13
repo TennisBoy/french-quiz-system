@@ -1,0 +1,16 @@
+{
+  "name": "frhwcheck",
+  "private": true,
+  "scripts": {
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "functions:serve": "supabase functions serve --env-file supabase/functions/.env",
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build"
+  },
+  "devDependencies": {
+    "supabase": "^2.120.0"
+  }
+}
