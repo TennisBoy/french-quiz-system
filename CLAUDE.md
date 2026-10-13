@@ -138,7 +138,8 @@ still succeeds, but the page only shows a "Configuration manquante" message (`is
 ## Git workflow
 
 Never commit directly to `main`. Commit only on a feature branch (or a sub-branch of one), push
-it, open a PR into `main`, and merge the PR. A merge to `main` deploys production.
+it, and open a PR into `main`. **Do not merge a PR until the user explicitly says to merge it**;
+opening the PR is where the work stops. A merge to `main` deploys production.
 
 ## Deployment
 
