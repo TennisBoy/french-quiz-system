@@ -1,21 +1,22 @@
-import { el, showMessage, fullName } from "./dom";
-import { clearProfile, currentProfile, errorMessage, supabase } from "./supabase";
+import { displayName, el, showMessage } from "./dom";
+import { clearMe, currentMe, errorMessage, isStaff, supabase } from "./supabase";
 import { themeButton } from "./theme";
-import type { Profile, Role } from "./types";
+import type { Me } from "./types";
 
 export type Params = Record<string, string>;
+export type Audience = "staff" | "student";
 export interface Route {
   path: string; // e.g. "/eleve/devoir/:id"
-  render: (main: HTMLElement, params: Params, profile: Profile | null) => void | Promise<void>;
-  role?: Role; // required role; omitted = any signed-in user
+  render: (main: HTMLElement, params: Params, me: Me | null) => void | Promise<void>;
+  audience?: Audience; // omitted = any signed-in user
   public?: boolean; // reachable without a session
 }
 
 let routes: Route[] = [];
 let root: HTMLElement;
 
-export function homeFor(profile: Profile): string {
-  return profile.role === "teacher" ? "/enseignant" : "/eleve";
+export function homeFor(me: Me): string {
+  return isStaff(me) ? "/enseignant" : "/eleve";
 }
 
 export function navigate(path: string, replace = false) {
@@ -34,29 +35,39 @@ function match(path: string): { route: Route; params: Params } | null {
   return null;
 }
 
-function header(profile: Profile | null): HTMLElement {
-  const nav = el("nav", { class: "nav" });
-  if (profile?.role === "teacher") {
-    nav.append(link("/enseignant", "Résultats"), link("/enseignant/devoirs", "Devoirs"), link("/enseignant/eleves", "Élèves et classes"));
-  } else if (profile) {
-    nav.append(link("/eleve", "Mes devoirs"));
+/** Top-bar tab; highlighted when the current page is under `href`. */
+function navTab(href: string, text: string, exact = false): HTMLAnchorElement {
+  const here = location.pathname;
+  const active = exact ? here === href : here === href || here.startsWith(`${href}/`);
+  const a = link(href, text, `nav-tab${active ? " active" : ""}`);
+  if (active) a.setAttribute("aria-current", "page");
+  return a;
+}
+
+function header(me: Me | null): HTMLElement {
+  const nav = el("nav", { class: "nav", "aria-label": "Navigation principale" });
+  if (me && isStaff(me)) {
+    nav.append(navTab("/enseignant", "Résultats", true), navTab("/enseignant/devoirs", "Devoirs"), navTab("/enseignant/eleves", "Élèves et classes"));
+  } else if (me) {
+    nav.append(navTab("/eleve", "Mes devoirs"));
   }
-  nav.append(themeButton());
-  if (profile) {
-    nav.append(
-      el("span", { class: "nav-user" }, fullName(profile) || profile.email),
+  const tools = el("div", { class: "nav-tools" }, themeButton());
+  if (me) {
+    tools.append(
+      el("span", { class: "nav-user" }, displayName(me.profile) || me.profile.email),
       el("button", {
         class: "btn btn-ghost",
         type: "button",
         onclick: async () => {
           await supabase.auth.signOut();
-          clearProfile();
+          clearMe();
           navigate("/login", true);
         },
       }, "Déconnexion"),
     );
   }
-  return el("header", { class: "topbar" }, el("div", { class: "topbar-inner" }, el("span", { class: "brand" }, "Devoirs de français"), nav));
+  return el("header", { class: "topbar" },
+    el("div", { class: "topbar-inner" }, el("span", { class: "brand" }, "Devoirs de français"), nav, tools));
 }
 
 export function link(href: string, text: string, cls = ""): HTMLAnchorElement {
@@ -75,26 +86,25 @@ async function render() {
   if (!found) return navigate("/login", true);
   const { route, params } = found;
 
-  let profile: Profile | null = null;
+  let me: Me | null = null;
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) profile = await currentProfile();
+    me = await currentMe();
   } catch (e) {
     console.error(e);
   }
 
   if (!route.public) {
-    if (!profile) return navigate("/login", true);
-    if (profile.must_change_password && route.path !== "/mot-de-passe") return navigate("/mot-de-passe", true);
-    if (route.role && route.role !== profile.role) return navigate(homeFor(profile), true);
-  } else if (profile && route.path === "/login") {
-    return navigate(homeFor(profile), true);
+    if (!me) return navigate("/login", true);
+    if (me.profile.must_change_password && route.path !== "/mot-de-passe") return navigate("/mot-de-passe", true);
+    if (route.audience && route.audience !== (isStaff(me) ? "staff" : "student")) return navigate(homeFor(me), true);
+  } else if (me && route.path === "/login") {
+    return navigate(homeFor(me), true);
   }
 
   const main = el("main", { class: "container" });
-  root.replaceChildren(header(profile), main);
+  root.replaceChildren(header(me), main);
   try {
-    await route.render(main, params, profile);
+    await route.render(main, params, me);
   } catch (e) {
     console.error(e);
     showMessage(main, `Erreur : ${errorMessage(e)}`);
@@ -107,7 +117,7 @@ export function startRouter(appRoot: HTMLElement, appRoutes: Route[]) {
   window.addEventListener("popstate", () => void render());
   supabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") {
-      clearProfile();
+      clearMe();
       if (location.pathname !== "/login") navigate("/login", true);
     }
   });

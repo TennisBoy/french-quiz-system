@@ -66,6 +66,11 @@ export function fullName(p: { first_name: string; last_name: string }): string {
   return `${p.first_name} ${p.last_name}`.trim();
 }
 
+/** How the app addresses someone: "Ms. Stewart" when an honorific is set, else the full name. */
+export function displayName(p: { first_name: string; last_name: string; honorific?: string | null }): string {
+  return p.honorific && p.last_name ? `${p.honorific} ${p.last_name}` : fullName(p);
+}
+
 /** CSV cell, quoted, and neutralized against spreadsheet formula injection. */
 export function csvCell(value: unknown): string {
   let s = value === null || value === undefined ? "" : String(value);
